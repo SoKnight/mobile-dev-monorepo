@@ -1,32 +1,33 @@
+import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import { StyleSheet, View } from "react-native";
-import { useRouter } from "expo-router";
 
-import Map from "@/components/Map"
-import { globalMapMarkerList, globalMapMarkerStore, MapMarkerList, nextMapMarkerId } from "@/storage/InMemoryStorage";
-import { MapMarkerModel } from "@/types";
+import Map from "@/components/Map";
+import { globalMapMarkerList, MapMarkerList, nextMapMarker } from "@/storage/InMemoryStorage";
 
 export default function Index() {
   const [markers, setMarkers] = useState<MapMarkerList>(globalMapMarkerList)
   const router = useRouter()
   
   const onMapViewLongPress = (event: any) => {
-    const marker: MapMarkerModel = {
-      id: nextMapMarkerId(),
-      location: event.coordinate,
-    }
-    
-    globalMapMarkerStore.set(marker.id, marker)
+    const marker = nextMapMarker(event.coordinate)
     setMarkers([...markers, marker])
   }
   
   const onMapMarkerPress = (id: number) => {
-    // TODO code
+    router.push({
+      pathname: "/marker/[id]",
+      params: { id },
+    })
   }
   
   return (
     <View style={styles.container}>
-    <Map markers={markers} onMapViewLongPress={onMapViewLongPress} onMapMarkerPress={onMapMarkerPress}/>
+      <Map
+        markers={markers}
+        onMapViewLongPress={onMapViewLongPress}
+        onMapMarkerPress={onMapMarkerPress}
+      />
     </View>
   );
 }

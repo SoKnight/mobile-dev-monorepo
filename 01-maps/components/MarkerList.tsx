@@ -15,7 +15,7 @@ export default function MarkerList({markers, onMapMarkerPress}: Props) {
                 <Marker
                     key={marker.id}
                     coordinate={marker.location}
-                    title={marker.title || 'Новый маркер'}
+                    title={marker.title || `Маркер #${marker.id}`}
                     description={marker.description}
                     onPress={() => onMapMarkerPress(marker.id)}
                 />
