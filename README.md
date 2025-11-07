@@ -5,7 +5,8 @@
 ## Навигация
 
 1. [Приложение на React Native с картой](/01-maps)
-2. TBD
+2. [Приложение на React Native с картой и локальной БД](/02-maps-local-db)
+3. TBD
 
 ## License
 
