@@ -46,9 +46,12 @@
         "expo-media-library",
         {
           "isAccessMediaLocationEnabled": true,
-          "granularPermissions": ["photo"]
+          "granularPermissions": [
+            "photo"
+          ]
         }
-      ]
+      ],
+      "expo-sqlite"
     ],
     "experiments": {
       "typedRoutes": true,
