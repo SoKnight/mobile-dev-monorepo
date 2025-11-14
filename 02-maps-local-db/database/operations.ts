@@ -17,12 +17,12 @@ export const constructOperations = (database: Database | null) => ({
     },
     
     deleteMarker: async (id: number) => {
-        const result = await require(database).delete(mapMarkers).where(eq(mapMarkers.id, id)).limit(1);
+        const result = await require(database).delete(mapMarkers).where(eq(mapMarkers.id, id));
         return result.changes > 0;
     },
     
     queryMarkerById: async (id: number) => {
-        const models = await require(database).select().from(mapMarkers).where(eq(mapMarkers.id, id)).limit(1);
+        const models = await require(database).select().from(mapMarkers).where(eq(mapMarkers.id, id));
         return models.length > 0 ? models[0] as MapMarkerModel : null;
     },
     
@@ -33,7 +33,7 @@ export const constructOperations = (database: Database | null) => ({
     
     updateMarker: async (id: number, title: string | null, description: string | null) => {
         const values: MapMarker$Insertion = { title: title, description: description };
-        const result = await require(database).update(mapMarkers).set(values).where(eq(mapMarkers.id, id)).limit(1);
+        const result = await require(database).update(mapMarkers).set(values).where(eq(mapMarkers.id, id));
         return result.changes > 0;
     },
     
@@ -46,7 +46,7 @@ export const constructOperations = (database: Database | null) => ({
     },
     
     deleteMarkerImage: async (id: number) => {
-        const result = await require(database).delete(mapMarkerImages).where(eq(mapMarkerImages.id, id)).limit(1)
+        const result = await require(database).delete(mapMarkerImages).where(eq(mapMarkerImages.id, id))
         return result.changes > 0
     },
 
