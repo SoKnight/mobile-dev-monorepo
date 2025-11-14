@@ -3,10 +3,12 @@ import LoadingView from "@/components/view/LoadingView";
 import { Database, initializeDatabase } from "@/database/init";
 import { constructOperations } from "@/database/operations";
 import { MapMarkerImageList, MapMarkerImageModel, MapMarkerList, MapMarkerModel } from "@/types";
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { LatLng } from "react-native-maps";
+import {useMigrations} from "drizzle-orm/expo-sqlite/migrator";
+import migrations from "@/drizzle/migrations";
 
-interface DatabaseContext {
+interface DatabaseOperations {
     // --- map markers CRUD
     createMarker: (location: LatLng) => Promise<MapMarkerModel>;
     deleteMarker: (id: number) => Promise<boolean>;
@@ -20,7 +22,7 @@ interface DatabaseContext {
     queryMarkerImages: (markerId: number) => Promise<MapMarkerImageList>;
 }
 
-const DatabaseContext = createContext<DatabaseContext | null>(null);
+const DatabaseContext = createContext<DatabaseOperations | null>(null);
 
 export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [database, setDatabase] = useState<Database | null>(null);
@@ -48,14 +50,28 @@ export const DatabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     if (!database)
         return <ErrorView text='Произошла ошибка при инициализации приложения :(' />
 
-    const context: DatabaseContext = useMemo(() => constructOperations(database), [database])
+    return <ContextProvider database={database}>{children}</ContextProvider>
+};
+
+function ContextProvider({ database, children }: {
+    database: Database;
+    children: React.ReactNode
+}) {
+    const context: DatabaseOperations = useMemo(() => constructOperations(database), [database])
+    const { success, error } = useMigrations(database, migrations)
+
+    if (error)
+        return <ErrorView text={error.message} />
+
+    if (!success)
+        return <ErrorView text='Произошла ошибка при миграции БД :(' />
 
     return (
         <DatabaseContext.Provider value={context}>
             {children}
         </DatabaseContext.Provider>
     );
-};
+}
 
 export function useDatabase() {
     const context = useContext(DatabaseContext);
