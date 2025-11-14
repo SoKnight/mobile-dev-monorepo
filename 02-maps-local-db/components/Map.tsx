@@ -1,8 +1,8 @@
 import MapView from "react-native-maps";
 import { StyleSheet } from "react-native";
 
-import { MapMarkerList } from "@/storage/InMemoryStorage";
 import MarkerList from "./MarkerList";
+import {MapMarkerList} from "@/types";
 
 interface Props {
     markers: MapMarkerList;

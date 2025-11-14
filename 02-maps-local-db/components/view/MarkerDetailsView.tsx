@@ -1,60 +1,129 @@
-import { useState } from "react";
+import React, {useCallback, useState} from "react";
 import { Alert, StyleSheet, Text, TextInput, ToastAndroid, View } from "react-native";
 
 import Button from "@/components/Button";
 import MarkerGalleryView from "@/components/view/MarkerGalleryView";
-import { dropMapMarker, dropMapMarkerImage, mapMarkerImageList, nextMapMarkerImage } from "@/storage/InMemoryStorage";
-import { MapMarkerModel } from "@/types";
+import {MapMarkerImageList, MapMarkerModel} from "@/types";
+import {useDatabase} from "@/context/DatabaseContext";
+import LoadingView from "@/components/view/LoadingView";
+import ErrorView from "@/components/view/ErrorView";
+import {useFocusEffect, useRouter} from "expo-router";
 
 interface Params {
     marker: MapMarkerModel;
-    onMarkerDelete?: (id: number) => void;
 }
 
-export default function MarkerDetailsView({marker, onMarkerDelete}: Params) {
-    const imageIds = marker.imageIds ?? []
-    const imageModels = mapMarkerImageList(imageIds)
+export default function MarkerDetailsView({marker}: Params) {
+    const { deleteMarker, updateMarker, createMarkerImage, deleteMarkerImage, queryMarkerImages } = useDatabase()
+    const router = useRouter()
 
     const [title, setTitle] = useState<string>(marker.title ?? "")
     const [description, setDescription] = useState<string>(marker.description ?? "")
-    const [imageUrls, setImageUrls] = useState<string[]>(imageModels.map((imageModel) => imageModel.url))
+    const [markerImages, setMarkerImages] = useState<MapMarkerImageList | null>(null)
+    const [loading, setLoading] = useState<boolean>(true);
 
-    const deleteMarker = (id: number) => {
-        dropMapMarker(id)
-        if (onMarkerDelete) onMarkerDelete(id)
+    useFocusEffect(
+        useCallback(() => {
+            setLoading(true);
+            queryMarkerImages(marker.id)
+                .then(setMarkerImages)
+                .catch((reason) => handleQueryMarkerImagesFailure(reason, marker.id))
+                .finally(() => setLoading(false))
+        }, [marker.id, queryMarkerImages])
+    );
+
+    const handleQueryMarkerImagesFailure = (reason: any, id: number) => {
+        console.log(`Couldn't query images of marker #${id}:`, reason)
+        setMarkerImages(null)
     }
 
-    const onTitleChange = (title: string) => {
-        marker.title = title
-        setTitle(title)
-    }
+    if (loading)
+        return <LoadingView />
 
-    const onDescriptionChange = (description: string) => {
-        marker.description = description
-        setDescription(description)
-    }
+    if (!markerImages)
+        return <ErrorView text={`Не удалось загрузить изображения маркера #${marker.id} :(`} />
 
-    const onImageAdd = (imageUrl: string) => {
-        const imageId = nextMapMarkerImage(imageUrl).id
-        marker.imageIds = [...(marker.imageIds ?? []), imageId]
-        setImageUrls([...imageUrls, imageUrl])
-    }
-
-    const imageDeleteFunction = (imageUrl: string, imageIndex: number) => {
-        const imageModel = imageModels[imageIndex]
-        if (imageModel?.url != imageUrl) {
-            Alert.alert("Ошибка!", "Не удалось выполнить удаление прикрепленного фото, попробуйте еще раз.")
-            return false
+    const onTitleChange = async (title: string) => {
+        try {
+            const updated = await updateMarker(marker.id, title, description)
+            if (updated) {
+                marker.title = title
+                setTitle(title)
+                return
+            } else {
+                console.error(`Couldn't update title of marker #${marker.id}!`)
+            }
+        } catch (error) {
+            console.error(`Couldn't update title of marker #${marker.id}:`, error)
         }
 
-        dropMapMarkerImage(imageModel.id)
-        marker.imageIds = marker.imageIds?.filter((id, _) => id != imageModel.id)
+        ToastAndroid.show(`Не удалось обновить маркер #${marker.id}`, ToastAndroid.SHORT)
+    }
 
-        const filter = (_: string, index: number) => index != imageIndex
-        setImageUrls((imageUrls) => imageUrls.filter(filter));
+    const onDescriptionChange = async (description: string) => {
+        try {
+            const updated = await updateMarker(marker.id, title, description)
+            if (updated) {
+                marker.description = description
+                setDescription(description)
+                return
+            } else {
+                console.error(`Couldn't update description of marker #${marker.id}!`)
+            }
+        } catch (error) {
+            console.error(`Couldn't update description of marker #${marker.id}:`, error)
+        }
 
-        ToastAndroid.show(`Фото #${imageModel.id} удалено`, ToastAndroid.SHORT)
-        return true
+        ToastAndroid.show(`Не удалось обновить маркер #${marker.id}`, ToastAndroid.SHORT)
+    }
+
+    const removeMarker = async (id: number) => {
+        try {
+            const deleted = await deleteMarker(id)
+            if (deleted) {
+                ToastAndroid.show(`Маркер #${id} удален`, ToastAndroid.SHORT)
+                router.push('/')
+                return
+            } else {
+                console.error(`Couldn't delete marker #${id}!`)
+            }
+        } catch (error) {
+            console.error(`Couldn't delete marker #${id}:`, error)
+        }
+
+        ToastAndroid.show(`Не удалось удалить маркер #${id}`, ToastAndroid.SHORT)
+    }
+
+    const addMarkerImage = async (imageUrl: string) => {
+        try {
+            const added = await createMarkerImage(marker.id, imageUrl)
+            setMarkerImages([...markerImages, added])
+            return
+        } catch (error) {
+            console.error(`Couldn't add image for marker #${marker.id}:`, error)
+        }
+
+        ToastAndroid.show(`Не удалось добавить изображение к маркеру #${marker.id}`, ToastAndroid.SHORT)
+    }
+
+    const removeMarkerImage = async (id: number) => {
+        try {
+            const deleted = await deleteMarkerImage(id)
+            if (deleted) {
+                ToastAndroid.show(`Фото #${id} удалено`, ToastAndroid.SHORT)
+                if (markerImages) {
+                    setMarkerImages(markerImages.filter(image => image.id !== id))
+                }
+                return true
+            } else {
+                console.error(`Couldn't delete marker image #${id}!`)
+            }
+        } catch (error) {
+            console.error(`Couldn't delete marker image #${id}:`, error)
+        }
+
+        Alert.alert("Ошибка!", "Не удалось выполнить удаление прикрепленного фото, попробуйте еще раз.")
+        return false
     }
 
     return (
@@ -88,11 +157,11 @@ export default function MarkerDetailsView({marker, onMarkerDelete}: Params) {
                     textAlignVertical="top"
                     onChangeText={onDescriptionChange}
                 />
-                <Button dangerous label="Удалить маркер" onButtonPressed={() => deleteMarker(marker.id)} />
+                <Button dangerous label="Удалить маркер" onButtonPressed={() => removeMarker(marker.id)} />
             </View>
 
             <View style={styles.imagesWidget}>
-                <MarkerGalleryView imageUrls={imageUrls} imageDeleteFunction={imageDeleteFunction} onImageAdd={onImageAdd} />
+                <MarkerGalleryView markerImages={markerImages} addMarkerImage={addMarkerImage} removeMarkerImage={removeMarkerImage} />
             </View>
         </View>
     )

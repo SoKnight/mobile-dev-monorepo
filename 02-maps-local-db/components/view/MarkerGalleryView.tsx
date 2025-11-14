@@ -1,19 +1,18 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import * as ImagePicker from 'expo-image-picker';
-import React, { useState } from "react";
+import React from "react";
 import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 
 import AdaptiveImage from '@/components/AdaptiveImage';
+import {MapMarkerImageList} from "@/types";
 
 interface Params {
-    imageUrls: string[];
-    imageDeleteFunction: (imageUrl: string, index: number) => boolean;
-    onImageAdd?: (imageUrl: string) => void;
+    markerImages: MapMarkerImageList;
+    addMarkerImage: (imageUrl: string) => Promise<void>;
+    removeMarkerImage: (id: number) => Promise<boolean>;
 }
 
-export default function MarkerDetailsView({imageUrls, imageDeleteFunction, onImageAdd}: Params) {
-    const [imageSources, setImageSources] = useState(imageUrls)
-
+export default function MarkerDetailsView({markerImages, addMarkerImage, removeMarkerImage}: Params) {
     const onAddButtonPress = async () => {
         try {
             let result = await ImagePicker.launchImageLibraryAsync({
@@ -24,18 +23,11 @@ export default function MarkerDetailsView({imageUrls, imageDeleteFunction, onIma
 
             if (!result.canceled) {
                 const imageUrl = result.assets[0].uri
-                if (onImageAdd) onImageAdd(imageUrl)
-                setImageSources([...imageSources, imageUrl])
+                await addMarkerImage(imageUrl);
             }
-        } catch (ex) {
+        } catch (error) {
             Alert.alert("Ошибка!", "Не удалось открыть диалог выбора фото, попробуйте еще раз.")
-        }
-    }
-
-    const onImageDeleteButtonPress = (expectedUrl: string, expectedIndex: number) => {
-        if (imageDeleteFunction(expectedUrl, expectedIndex)) {
-            const filter = (_: string, index: number) => index != expectedIndex
-            setImageSources((imageUrls) => imageUrls.filter(filter));
+            console.error("Couldn't add marker image!", error)
         }
     }
 
@@ -49,13 +41,13 @@ export default function MarkerDetailsView({imageUrls, imageDeleteFunction, onIma
             </View>
 
             <View style={styles.imageView}>
-                {imageSources.map((url, index) => (
+                {markerImages.map((markerImage, index) => (
                     <View key={index} style={styles.imageItem}>
-                        <AdaptiveImage imageKey={index} imageUrl={url} />
+                        <AdaptiveImage imageKey={index} imageUrl={markerImage.url} />
                         <Pressable
                             style={styles.imageDeleteButton}
                             hitSlop={8}
-                            onPress={() => onImageDeleteButtonPress(url, index)}
+                            onPress={() => removeMarkerImage(markerImage.id)}
                         >
                             <FontAwesome name="trash" size={16} color="#fff" />
                         </Pressable>

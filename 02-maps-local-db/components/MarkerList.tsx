@@ -1,7 +1,6 @@
 import { Marker } from "react-native-maps";
 
-import { MapMarkerList } from "@/storage/InMemoryStorage";
-import { MapMarkerModel } from "@/types";
+import {MapMarkerList, MapMarkerModel} from "@/types";
 
 interface Props {
     markers: MapMarkerList;
