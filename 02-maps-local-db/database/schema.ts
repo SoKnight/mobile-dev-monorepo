@@ -31,9 +31,6 @@ export const mapMarkers = sqliteTable('map_markers', {
         .$onUpdateFn((): Date => new Date()),
 });
 
-export type MapMarker$insert = typeof mapMarkers.$inferInsert
-export type MapMarker$select = typeof mapMarkers.$inferSelect
-
 export const mapMarkerImages = sqliteTable('map_marker_images', {
     // `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL
     id: integer('id').primaryKey({ autoIncrement: true }),
@@ -52,6 +49,3 @@ export const mapMarkerImages = sqliteTable('map_marker_images', {
         .notNull()
         .$defaultFn((): Date => new Date()),
 });
-
-export type MapMarkerImage$insert = typeof mapMarkerImages.$inferInsert
-export type MapMarkerImage$select = typeof mapMarkerImages.$inferSelect

@@ -1,17 +1,10 @@
-import { LatLng } from "react-native-maps";
+import { mapMarkerImages, mapMarkers } from "./database/schema";
 
-export interface MapMarkerImageModel {
-    id: number;
-    url: string;
-}
+export type MapMarkerModel = typeof mapMarkers.$inferSelect
+export type MapMarkerList = MapMarkerModel[]
 
-export interface MapMarkerModel {
-    id: number;
-    location: LatLng;
-    title?: string;
-    description?: string;
-    imageIds?: number[];
-}
+export type MapMarkerImageModel = typeof mapMarkerImages.$inferSelect
+export type MapMarkerImageList = MapMarkerImageModel[]
 
 export interface NavigationParams {
     markerId: { id: string };
