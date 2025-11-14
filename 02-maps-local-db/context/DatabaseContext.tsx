@@ -64,7 +64,7 @@ function ContextProvider({ database, children }: {
         return <ErrorView text={error.message} />
 
     if (!success)
-        return <ErrorView text='Произошла ошибка при миграции БД :(' />
+        return <LoadingView />
 
     return (
         <DatabaseContext.Provider value={context}>
