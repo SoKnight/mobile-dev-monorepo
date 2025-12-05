@@ -8,6 +8,7 @@ import {useDatabase} from "@/context/DatabaseContext";
 import LoadingView from "@/components/view/LoadingView";
 import ErrorView from "@/components/view/ErrorView";
 import {useFocusEffect, useRouter} from "expo-router";
+import {notificationService} from "@/services/notifications";
 
 interface Params {
     marker: MapMarkerModel;
@@ -83,6 +84,7 @@ export default function MarkerDetailsView({marker}: Params) {
             if (deleted) {
                 ToastAndroid.show(`Маркер #${id} удален`, ToastAndroid.SHORT)
                 router.push('/')
+                await notificationService.removeNotification(id)
                 return
             } else {
                 console.error(`Couldn't delete marker #${id}!`)
