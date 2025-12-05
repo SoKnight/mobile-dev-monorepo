@@ -60,11 +60,11 @@ class NotificationService implements PermissionAwareService {
         const id = notification.notificationId;
 
         try {
-            await Notifications.dismissNotificationAsync(id);
+            await Notifications.cancelScheduledNotificationAsync(id);
         } catch { /* doesn't matter */ }
 
         try {
-            await Notifications.cancelScheduledNotificationAsync(id);
+            await Notifications.dismissNotificationAsync(id);
         } catch { /* doesn't matter */ }
 
         this.activeNotifications.delete(markerId);
