@@ -1,5 +1,5 @@
 import {useFocusEffect, useRouter} from "expo-router";
-import React, {useCallback, useEffect, useState} from "react";
+import React, {useCallback, useEffect, useRef, useState} from "react";
 import {StyleSheet, View} from "react-native";
 
 import Map from "@/components/Map";
@@ -29,6 +29,9 @@ export default function Index() {
         }, [queryMarkers])
     );
 
+    const markersRef = useRef<MapMarkerList | null>(null);
+    useEffect(() => { markersRef.current = markers }, [markers]);
+
     useEffect(() => {
         (async () => {
             try {
@@ -40,6 +43,8 @@ export default function Index() {
                 await locationService.startLocationUpdates(async location => {
                     if (location) {
                         setLocation(location);
+                        const markers = markersRef.current
+                        markers && await locationService.lookupMarkersNearby(location, markers);
                     }
                 })
             } catch (ex) {
