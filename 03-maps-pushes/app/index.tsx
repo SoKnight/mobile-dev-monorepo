@@ -29,9 +29,6 @@ export default function Index() {
         }, [queryMarkers])
     );
 
-    const markersRef = useRef<MapMarkerList | null>(null);
-    useEffect(() => { markersRef.current = markers }, [markers]);
-
     useEffect(() => {
         (async () => {
             try {
@@ -41,11 +38,7 @@ export default function Index() {
                 setLocation(await locationService.obtainCurrentLocation());
 
                 await locationService.startLocationUpdates(async location => {
-                    if (location) {
-                        setLocation(location);
-                        const markers = markersRef.current
-                        markers && await locationService.lookupMarkersNearby(location, markers);
-                    }
+                    location && setLocation(location);
                 })
             } catch (ex) {
                 console.log("Couldn't setup location tracking:", ex);
@@ -54,6 +47,12 @@ export default function Index() {
 
         return () => locationService.stopLocationUpdates();
     }, []);
+
+    useEffect(() => {
+        (async () => {
+            location && markers && await locationService.lookupMarkersNearby(location, markers);
+        })();
+    }, [location, markers])
 
     const handleQueryMarkersFailure = (reason: any) => {
         console.log("Couldn't query markers:", reason)
