@@ -46,4 +46,4 @@ npx expo start
 
 ## License
 
-This project is open-source and licensed under the [MIT license](../LICENSE).
+This project is open-source and licensed under the [MIT license](/LICENSE).
