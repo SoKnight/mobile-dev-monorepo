@@ -1,16 +1,17 @@
-import MapView from "react-native-maps";
+import MapView, {LatLng, Marker} from "react-native-maps";
 import { StyleSheet } from "react-native";
 
 import MarkerList from "./MarkerList";
 import {MapMarkerList} from "@/types";
 
 interface Props {
+    currentLocation: LatLng | null;
     markers: MapMarkerList;
     onMapViewLongPress: (event: any) => void;
     onMapMarkerPress: (id: number) => void;
 }
 
-export default function Map({markers, onMapViewLongPress, onMapMarkerPress}: Props) {
+export default function Map({currentLocation, markers, onMapViewLongPress, onMapMarkerPress}: Props) {
     return (
         <MapView
             style={styles.map}
@@ -25,6 +26,7 @@ export default function Map({markers, onMapViewLongPress, onMapMarkerPress}: Pro
             loadingEnabled={true}
             onLongPress={(event: any) => onMapViewLongPress(event.nativeEvent)}
         >
+            {currentLocation && <Marker coordinate={currentLocation} />}
             <MarkerList markers={markers} onMapMarkerPress={onMapMarkerPress} />
         </MapView>
     );
